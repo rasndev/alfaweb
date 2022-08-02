@@ -19,6 +19,7 @@
 import TablaCursosCompVue from '@/components/TablaCursosComp.vue'
 import ContadoresCompVue from '@/components/ContadoresComp.vue'
 import AgregaCursoDialog from '@/components/AgregaCursoDialog.vue'
+import { mapActions } from 'vuex'
 
 export default {
   data: function(){
@@ -28,6 +29,12 @@ export default {
     "tabla-cursos-comp":TablaCursosCompVue,
     "contadores-comp":ContadoresCompVue,
     "agrega-curso-comp":AgregaCursoDialog
+  },
+  methods:{
+    ...mapActions(['addCurso'])
+  },
+  created(){
+    this.addCurso;
   }
 }
 </script>

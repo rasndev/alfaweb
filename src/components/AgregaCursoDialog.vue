@@ -6,6 +6,7 @@
       persistent
     >
       <template v-slot:activator="{ on, attrs }">
+      <!-- usar un slot aca para agegar un btn -->
         <v-btn
           color="primary"
           dark
@@ -48,7 +49,7 @@
                   type="number"
                   :rules="cuposRules"
                   label="Cupos "
-                  @keypress="soloNum"
+                  @change="soloNum"
                   required
                 ></v-text-field>
               </v-col>
@@ -58,7 +59,7 @@
                   type="number"
                   :rules="inscritosRules"
                   label="Inscritos"
-                  @keypress="soloNum"
+                  @change="soloNum"
                   required
                 ></v-text-field>
               </v-col>
@@ -68,7 +69,7 @@
                   type="number"
                   :rules="duracionRules"
                   label="Duración"
-                  @keypress="soloNum"
+                  @change="soloNum"
                   required
                 ></v-text-field>
               </v-col>
@@ -109,7 +110,7 @@
               :disabled="!valid"
               color="success"
               class="mr-4"
-              @click="validar"
+              @click.prevent="validar"
             >
             AGREGAR
             </v-btn>
@@ -134,7 +135,11 @@
 </template>
 
 <script>
-import { addDoc, collection, getFirestore, serverTimestamp } from 'firebase/firestore';
+/**
+* Para que se haga modular, este componente debe $emit un objeto que será tratado por el componente hijo
+*/
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/firebase/firebaseConfig'
 
 export default {
   data () {
@@ -156,16 +161,19 @@ export default {
       cupos: '',
       cuposRules: [
         v => !!v || 'Favor indicar cantidad de cupos',
+        v => v > 0 || 'Cantidad no es válida',
         v => /\d/.test(v) || 'Cantidad no es válida',
       ],
       inscritos:'',
       inscritosRules:[
         v => !!v || 'Favor indicar cantidad de inscritos',
+        v => v > 0 || 'Cantidad no es válida',
         v => (!!v && this.cuposInscritos()) || 'Cupos insuficientes',
       ],
       duracionCantidad:'',
       duracionRules:[
         v => !!v || 'Favor indicar duración',
+        v => v > 0 || 'Favor indicar duración',
       ],
       duracionUnidad:'',
       duracionUnidadRules:[
@@ -191,8 +199,10 @@ export default {
       return this.inscritos <= this.cupos
     },  
     validar () {
+      if (!this.$refs.form.validate()) {
+        return
+      }
       this.agregaCurso();
-      this.$refs.form.validate();
       this.dialog = false
       this.reset();
     },
@@ -206,38 +216,39 @@ export default {
     },
     soloNum: ($event) => {
       if ($event.charCode === 0 || /\d/.test(String.fromCharCode($event.charCode))) {
+          console.log($event.charCode);
           return true
       } else {
           $event.preventDefault();
       }
     },
+    // metodo para crear string de "duracion"
+    concatDuracion(){
+      return this.duracionCantidad == 1 && this.duracionUnidad === "meses" 
+             ? [this.duracionCantidad, 'mes'].join(' ') 
+             : [this.duracionCantidad, this.duracionUnidad].join(' ') 
+    },
     //metodo para agregar registro de nuevoCurso a firebase. coleccion "cursos"
-    async agregaCurso(){
-      const db = getFirestore();
+    async agregaCurso(){ 
       const nuevoCurso =  
       {
-        nombre: this.nombre,
+        nombre: this.nombre, 
         urlImg: this.imgUrl,
         cupos: this.cupos,
         inscritos: this.inscritos,
-        duracionCantidad: this.duracionCantidad,
-        duracionUnidad: this.duracionUnidad,
+        duracion: this.concatDuracion(),
         costo: this.costo,
         codigo: this.codigo,
         descripcion: this.desc,
         fechaReg: serverTimestamp()
       }
       try {
-        let resp = await addDoc(collection(db, "cursos"), nuevoCurso);
-        console.log(resp);
-        console.log(nuevoCurso);
+        await addDoc(collection(db, "cursos"), nuevoCurso);
       } catch (error) {
         console.log(error);
-        console.log(nuevoCurso);
       }
     }
-
-  }
+  },
 }
 </script>
 

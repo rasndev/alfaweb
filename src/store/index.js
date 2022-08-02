@@ -1,5 +1,5 @@
 import { db } from '@/firebase/firebaseConfig'
-import { collection, getDocs } from 'firebase/firestore'
+import { onSnapshot, query, orderBy, collection } from 'firebase/firestore'
 import Vue from 'vue'
 import Vuex from 'vuex'
 
@@ -10,27 +10,40 @@ export default new Vuex.Store({
     cursos:[]
   },
   getters: {
+    
   },
   mutations: {
     ADD_CURSO(state, curso){
-      state.cursos.push({
-        id: curso.id,
-        nombre: curso.data().nombre,
-        cupos: curso.data().cupos,
-        inscritos: curso.data().inscritos,
-        duracion: curso.data().duracion, //TODO: pasar a date
-        costo: curso.data().costo,
-        terminado: curso.data().terminado,
-        fechaInicio: curso.data().inicio,
-        descripcion: curso.data().descripcion
-      })
+      state.cursos.push(curso)  
+    },
+    RESET_CURSO(state){
+      state.cursos = [];
     }
   },
   actions: {
     async addCurso({commit}){
-      let querySnapShot = await getDocs(collection(db, 'cursos'));
-      querySnapShot.forEach(curso =>{
-        commit('ADD_CURSO', curso)
+      const q = query(collection(db, "cursos"), orderBy("fechaReg"));
+      onSnapshot(q, (querySnapshot) => {
+        commit('RESET_CURSO');
+        querySnapshot.forEach((doc)=>{
+          let nuevaFecha = new Intl.DateTimeFormat('es-CL').format(doc.data().fechaReg.toDate());
+          let nuevoPrecio = "$" + (new Intl.NumberFormat({currency: 'EUR'}).format(doc.data().costo)).toString();
+          let nuevoCurso = {
+            codigo: doc.data().codigo,
+            urlImg: doc.data().urlImg,
+            nombre: doc.data().nombre,
+            cupos: doc.data().cupos,
+            inscritos: doc.data().inscritos,
+            duracion: doc.data().duracion,
+            costo: nuevoPrecio,
+            terminado: doc.data().terminado,
+            fechaReg: nuevaFecha,
+          }
+          console.log(nuevoCurso);
+          doc.fechaReg = nuevaFecha;
+
+          commit('ADD_CURSO', nuevoCurso) 
+        })
       })
     }
   },
