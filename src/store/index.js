@@ -39,7 +39,6 @@ export default new Vuex.Store({
             terminado: doc.data().terminado,
             fechaReg: nuevaFecha,
           }
-          console.log(nuevoCurso);
           doc.fechaReg = nuevaFecha;
 
           commit('ADD_CURSO', nuevoCurso) 

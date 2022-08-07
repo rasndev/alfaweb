@@ -6,7 +6,6 @@
       persistent
     >
       <template v-slot:activator="{ on, attrs }">
-      <!-- usar un slot aca para agegar un btn -->
         <v-btn
           color="primary"
           dark
@@ -26,7 +25,7 @@
             ref="form"
             v-model="valid"
             lazy-validation
-          >
+            >
             <v-text-field
               v-model="nombre"
               :counter="40"
@@ -219,7 +218,7 @@ export default {
           console.log($event.charCode);
           return true
       } else {
-          $event.preventDefault();
+          $event.prevent();
       }
     },
     // metodo para crear string de "duracion"
